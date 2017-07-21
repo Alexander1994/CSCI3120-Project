@@ -39,7 +39,7 @@ static void processSJF();
 static void processRR();
 static void processMLFQ();
 
-static int isRCBEmpty(RCB *req);
+static int isRCBEmpty(RCB req);
 static void initRequestTable();
 
 /* This function takes a file handle to a client, reads in the request,
@@ -221,13 +221,13 @@ void processSJF() {
 
 }
 
-int isRCBEmpty(RCB *req) {
-  return req->seq == 0
-      && req->fileDescriptor == 0
-      && req->bytesRemaining == 0
-      && req->fileSize == 0
-      && req->priority == 0
-      && req->handle == NULL;
+int isRCBEmpty(RCB req) {
+  return req.seq == 0
+      && req.fileDescriptor == 0
+      && req.bytesRemaining == 0
+      && req.fileSize == 0
+      && req.priority == 0
+      && req.handle == NULL;
 }
 
 void initRequestTable() {
