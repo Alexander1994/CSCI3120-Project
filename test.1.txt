@@ -1,0 +1,27 @@
+Title: Test 0 - Simultaneous requests, same files
+
+Group Number: 10
+
+Purpose: 
+Test 5 simultaneous requests accessing the same file.
+Since they're all accessing the same file, but only reading from it, there should not be
+any conflict. The order will vary each time because the file size will be the same for each request
+which means scheduling will depend on who managed to connect first.
+
+How it works: 
+5 clients connect to the server at the same time. After a brief pause 
+to ensure all are connected they will each request the same file at the same time.
+
+Expected Results:
+SJF: 
+	They should go from shortest to longest, so : 1, 2, 3, 4, 5
+RR: 
+	They should go based on who arrives first, but a long file will require multiple passes.
+	Since they all arrive at the same time the order varies slightly, but testtext3 and testtext4 are greater than 8kb
+	so the order will be something like: 
+	
+MLFB:
+	They should go based on who arrives first, but a long file will require multiple passes and
+	be bumped to different priority queues.
+	Since they all arrive at the same time the order varies slightly, but testtext3 is greater than 8kb and
+	testtext4 is greater than 64 kb so the order will be something like :
