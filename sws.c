@@ -19,7 +19,7 @@
 #define KB 1024
 
 typedef struct RCB {
-  int seq, fileDescriptor, bytesRemaining, fileSize, priority;
+  int seq, fileDescriptor, bytesRemaining, fileSize, priority, quantum;
   FILE * handle;
   // Other information the schedule might need
 } RCB;
@@ -199,8 +199,24 @@ void processRCB() {
   }
 }
 
-void scheduleSJF(int len, FILE* fin, int fd) {
 
+void scheduleSJF(int len, FILE* fin, int fd) {
+int queueSize = 0;
+int priority = 0;
+  fseek(fp, 0L, SEEK_END);
+int sz = ftell(fp);
+    if (queueSize <= numRequests) {
+      priority++;
+      RCB req = {
+      priority, fd, len, len, 1, sz
+      fin
+    };
+		
+		
+		queueSize++;
+		return 1;
+	}
+	return 0;			
 }
 
 void scheduleRR(int len, FILE* fin, int fd) {
