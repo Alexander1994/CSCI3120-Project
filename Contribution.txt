@@ -1,0 +1,11 @@
+Alexander McCallum - B00610341
+Implementing multi-level queues with feedback.
+
+Rebecca Ansems - B00700850
+Implementing Shortest Job First.
+
+Samantha Williamson - B00690535
+Creating tests and generating test files.
+
+Mike Fisher - B00530390
+Implementing Round Robin.
