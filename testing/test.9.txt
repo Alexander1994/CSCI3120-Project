@@ -1,0 +1,25 @@
+Title: Test 9 - Large test - Clustered - Large files
+
+Group Number: 10
+
+Purpose: 
+Similar to the past test. Ensure that our server can handle up to 
+the specified 100 requests, so 100 potential threads, of small and 
+large files. Unlike Tests 6 and 7 with the small files, some of these 
+requests will require multiple passes in the scheduler for Round Robin 
+or MLFB.
+The requests are also much less stagered than the previous test to 
+ensure that the server can handle having many requests in its system
+at once.
+
+How it works: 
+100 requests will come in for all file sizes and they will all come in
+more frequently than Test 8.
+
+Expected Results:
+SJF: 
+	
+RR: 
+	
+	
+MLFB:
