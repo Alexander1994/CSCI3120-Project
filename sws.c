@@ -15,7 +15,7 @@
 #include "network.h"
 
 #define MAX_HTTP_SIZE 8192                 /* size of buffer to allocate */
-#define MAX_THREADS 1024
+#define MAX_THREADS 100
 #define KB 1024
 
 typedef struct RCB {
@@ -24,7 +24,7 @@ typedef struct RCB {
   // Other information the schedule might need
 } RCB;
 
-RCB EMPTY_RCB = {0,0,0,0,0,NULL};
+RCB EMPTY_RCB = {0,0,0,0,0,0,NULL};
 RCB requestTable[MAX_THREADS];
 int scheduler=0;
 int currentRequest=0;
@@ -34,6 +34,8 @@ static void scheduleRCB(int len, FILE * fin, int fd);
 static void scheduleSJF(int len, FILE * fin, int fd);
 static void scheduleRR(int len, FILE * fin, int fd);
 static void scheduleMLFQ(int len, FILE * fin, int fd);
+
+static void sendPacketsToClientMLFQ(RCB *req);
 
 static void processRCB();
 static void processSJF();
@@ -96,7 +98,6 @@ static void serve_client( int fd ) {
       len = sprintf( buffer, "HTTP/1.1 200 OK\n\n" );/* send success code */
       write( fd, buffer, len );
       scheduleRCB(len, fin, fd);
-      fclose( fin );
 
       /*
       do {                                          // loop, read & send file
@@ -113,7 +114,6 @@ static void serve_client( int fd ) {
         */
     }
   }
-  close( fd );                                     /* close client connectuin*/
 }
 
 
@@ -204,7 +204,7 @@ void processRCB() {
 void scheduleSJF(int len, FILE* fin, int fd) {
 
 int rcbCount = 0;
-  int reqIndex = -1;  
+  int reqIndex = -1;
 
   //get file size
   fseek(fin, 0, SEEK_END);
@@ -212,8 +212,8 @@ int rcbCount = 0;
   fseek(fin, 0, SEEK_SET);
 
   RCB req = { -1, fd, len, len, 1, fin};
-  
-    size_t i = 0; 
+
+    size_t i = 0;
 
   for(i=0; i < numRequests; i++)
   {
@@ -227,7 +227,7 @@ int rcbCount = 0;
         req.seq = i;
       }
     }
-  }	
+  }
 }
 
 void scheduleRR(int len, FILE* fin, int fd) {
@@ -238,13 +238,14 @@ void scheduleRR(int len, FILE* fin, int fd) {
 void scheduleMLFQ(int len, FILE* fin, int fd) {
     int rcbCount = 0;
     int reqIndex = -1;
-    int priorityOneCount = 1; // seq start at 1
-    size_t i = 0; 
+    int priorityOneCount = 1; // seq start at 1 to account for RCB to be added
+    size_t i;
     for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
       if (!isRCBEmpty(requestTable[i])) rcbCount++; // inc rcbCount when RCB found
       else if (reqIndex < 0) reqIndex = i; // if an index location is not found && location is empty, set index to add request to empty location
       if (requestTable[i].priority == 1) priorityOneCount++; // count requests with priority 1 to set sequence for RCB
     }
+    printf("%d %d %d\n", priorityOneCount, fd, len);
     RCB req = {
       priorityOneCount, fd, len, len, 1,
       fin
@@ -256,41 +257,50 @@ void scheduleMLFQ(int len, FILE* fin, int fd) {
 void processMLFQ() {
   int rcbCount = 0;
   int indexToProcess = -1;
-  int lowestSequenceFound = MAX_THREADS + 1;
+  int lowestSeqOfPriority[4] = {MAX_THREADS + 1};
+  int indexOfLowestSeq[4] = {-1};
+  int largestSeqOfPriority[4] = {0};
+  int priority;
+  size_t i;
 
-  size_t i = 0; 
-  size_t priority = 1;
-  // finds RCB with highest priority and smallest sequence number
-  for (priority = 1; priority <= 3 && indexToProcess < 0; priority++) { // search for each priority starting with 1
-    for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
-      if (!isRCBEmpty(requestTable[i])) rcbCount++; // inc rcbCount when RCB found
-      if (requestTable[i].priority == priority && requestTable[i].seq < lowestSequenceFound) { // only track index if lowest sequence
-        lowestSequenceFound = requestTable[i].seq;
-        indexToProcess = i;
+  // finds highest seq and lowest seq number for each priority
+  for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
+    if (!isRCBEmpty(requestTable[i])) {
+      rcbCount++; // inc rcbCount when RCB found
+      priority = requestTable[i].priority;
+      if (requestTable[i].seq < lowestSeqOfPriority[priority]) {
+        lowestSeqOfPriority[priority] = requestTable[i].seq;
+        indexOfLowestSeq[priority] = i;
       }
+
+      if (requestTable[i].seq > largestSeqOfPriority[priority])
+        largestSeqOfPriority[priority] = requestTable[i].seq;
+
     }
   }
 
-  if (indexToProcess < 0) printf("No RCB find in request Table\n");
+  // Starting with p=1 use the lowest sequence as the index to process
+  for (size_t p = 1; p <= 3; p++) {
+    if (indexOfLowestSeq[p] != -1) {
+      indexToProcess = indexOfLowestSeq[p];
+      break;
+    }
+  }
 
-  // retrieve request with index and processes request
-  if ( requestTable[indexToProcess].priority == 3 ) {
-    processWholeRequest();
+  if (indexToProcess < 0) {
+    printf("No RCB find in request Table\n");
+    return;
+  }
+  sendPacketsToClientMLFQ(&requestTable[indexToProcess]);
+  if (requestTable[indexToProcess].bytesRemaining == 0) {
     numRequests--;
-  } else if (requestTable[indexToProcess].priority == 2) {
-    if (requestTable[indexToProcess].bytesRemaining <= 64 * KB )  {
-      processWholeRequest();
-      numRequests--;
-    } else {
-
-    }
-  } else if (requestTable[indexToProcess].priority == 1) {
-    if (requestTable[indexToProcess].bytesRemaining <= 8 * KB )  {
-      processWholeRequest();
-      numRequests--;
-    } else {
-
-    }
+    requestTable[indexToProcess] = EMPTY_RCB;
+    fclose( requestTable[indexToProcess].handle );
+    close( requestTable[indexToProcess].fileDescriptor );
+  } else {
+    if (requestTable[indexToProcess].priority != 3)
+      requestTable[indexToProcess].priority++;
+    requestTable[indexToProcess].seq = largestSeqOfPriority[requestTable[indexToProcess].priority]+1; // find the largest seq for that priority and add 1
   }
 }
 
@@ -299,7 +309,7 @@ void processRR() {
 }
 
 void processSJF() {
-    size_t i = 0; 
+    size_t i = 0;
   for(i=0; i < sizeof(requestTable); i++)
   {
     processWholeRequest();
@@ -328,6 +338,43 @@ void initRequestTable() {
   for (i = 0; i < MAX_THREADS; i++) {
     requestTable[i] = EMPTY_RCB;
   }
+}
+
+void sendPacketsToClientMLFQ(RCB *req) {
+  static char *buffer;                              /* request buffer */
+  FILE *fin = req->handle;                          /* input file handle */
+  int len = req->fileSize;                          /* length of data read */
+  int fd = req->fileDescriptor;
+  int packetCounter = 0;
+  int packetLimit = (req->priority == 1) ? 1 : 8;
+
+  if( !buffer ) {                                   /* 1st time, alloc buffer */
+    buffer = malloc( MAX_HTTP_SIZE );
+    if( !buffer ) {                                 /* error check */
+      perror( "Error while allocating memory" );
+      abort();
+    }
+  }
+
+  memset( buffer, 0, MAX_HTTP_SIZE );
+  if( read( fd, buffer, MAX_HTTP_SIZE ) <= 0 ) {    /* read req from client */
+    perror( "Error while reading request" );
+    abort();
+  }
+
+  do {                                             // loop, read & send file
+    len = fread( buffer, 1, MAX_HTTP_SIZE, fin );  // read file chunk
+    if( len < 0 ) {                                // check for errors
+        perror( "Error while writing to client" );
+    } else if( len > 0 ) {                         // if none, send chunk
+      len = write( fd, buffer, len );
+      if( len < 1 ) {                              // check for errors
+        perror( "Error while writing to client" );
+      }
+    }
+    req->bytesRemaining -= len;
+    packetCounter++;
+  } while( len == MAX_HTTP_SIZE && packetCounter <= packetLimit ); // the last chunk < 8192
 }
 
 void processWholeRequest() {
