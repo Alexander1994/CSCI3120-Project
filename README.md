@@ -2,10 +2,12 @@
 Group Project for CSCI3120
 
 ### To compile
+
 make all
 
 
 ###To run hydra tests
+
 On one terminal run:
 ./sws 38080 *SJF||RR||MLFQ*
 

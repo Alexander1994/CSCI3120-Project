@@ -12,11 +12,15 @@ by hand.
 How it works: 
 10 requests will come in at different times to be scheduled by the scheduler.
 All requests will be fore files less than 8 kb
+
 Expected Results:
 All results should be scheduled according to their algorithms.
 RR and MLFQ will have similar results since each file only needs to pass through
 the scheduler once.
 SJF: 
+	1, 2, 3, 6, 5, 4, 7, 8, 9, 10  or 1, 2, 3, 6, 5, 4, 8, 7, 9, 10
+	Since request 7 and 8 are the same length and same time their order may vary 
+	based on who connects first.
 	
 RR: 
 	
