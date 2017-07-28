@@ -183,6 +183,7 @@ void scheduleRCB(int len, FILE *fin, int fd) {
       printf("schedule var not valid option\n");
   }
 }
+
 void processRCB() {
   switch (scheduler) {
     case 1:
@@ -201,22 +202,32 @@ void processRCB() {
 
 
 void scheduleSJF(int len, FILE* fin, int fd) {
-int queueSize = 0;
-int priority = 0;
-  fseek(fp, 0L, SEEK_END);
-int sz = ftell(fp);
-    if (queueSize <= numRequests) {
-      priority++;
-      RCB req = {
-      priority, fd, len, len, 1, sz
-      fin
-    };
-		
-		
-		queueSize++;
-		return 1;
-	}
-	return 0;			
+
+int rcbCount = 0;
+  int reqIndex = -1;  
+
+  //get file size
+  fseek(fin, 0, SEEK_END);
+  int sz = ftell(fin);
+  fseek(fin, 0, SEEK_SET);
+
+  RCB req = { -1, fd, len, len, 1, fin};
+  
+    size_t i = 0; 
+
+  for(i=0; i < numRequests; i++)
+  {
+    if(!isRCBEmpty(requestTable[i]))
+    {
+      if(requestTable[i].bytesRemaining > sz)
+      {
+        requestTable[i+1] = requestTable[i];
+        requestTable[i+1].seq = i+1;
+        requestTable[i] = req;
+        req.seq = i;
+      }
+    }
+  }	
 }
 
 void scheduleRR(int len, FILE* fin, int fd) {
@@ -225,11 +236,11 @@ void scheduleRR(int len, FILE* fin, int fd) {
 
 // priority 1=8KB, 2=64KB,3=Remainder of the response
 void scheduleMLFQ(int len, FILE* fin, int fd) {
-
     int rcbCount = 0;
     int reqIndex = -1;
     int priorityOneCount = 1; // seq start at 1
-    for (size_t i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
+    size_t i = 0; 
+    for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
       if (!isRCBEmpty(requestTable[i])) rcbCount++; // inc rcbCount when RCB found
       else if (reqIndex < 0) reqIndex = i; // if an index location is not found && location is empty, set index to add request to empty location
       if (requestTable[i].priority == 1) priorityOneCount++; // count requests with priority 1 to set sequence for RCB
@@ -247,9 +258,11 @@ void processMLFQ() {
   int indexToProcess = -1;
   int lowestSequenceFound = MAX_THREADS + 1;
 
+  size_t i = 0; 
+  size_t priority = 1;
   // finds RCB with highest priority and smallest sequence number
-  for (size_t priority = 1; priority <= 3 && indexToProcess < 0; priority++) { // search for each priority starting with 1
-    for (size_t i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
+  for (priority = 1; priority <= 3 && indexToProcess < 0; priority++) { // search for each priority starting with 1
+    for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
       if (!isRCBEmpty(requestTable[i])) rcbCount++; // inc rcbCount when RCB found
       if (requestTable[i].priority == priority && requestTable[i].seq < lowestSequenceFound) { // only track index if lowest sequence
         lowestSequenceFound = requestTable[i].seq;
@@ -286,7 +299,12 @@ void processRR() {
 }
 
 void processSJF() {
-
+    size_t i = 0; 
+  for(i=0; i < sizeof(requestTable); i++)
+  {
+    processWholeRequest();
+    numRequests--;
+  }
 }
 
 int getEmptyIndexInRCBTable() {
@@ -306,7 +324,8 @@ int isRCBEmpty(RCB req) {
 }
 
 void initRequestTable() {
-  for (size_t i = 0; i < MAX_THREADS; i++) {
+  size_t i = 0;
+  for (i = 0; i < MAX_THREADS; i++) {
     requestTable[i] = EMPTY_RCB;
   }
 }
