@@ -279,7 +279,8 @@ void processMLFQ() {
   }
 
   // Starting with p=1 use the lowest sequence as the index to process
-  for (size_t p = 1; p <= 3; p++) {
+  size_t p;
+  for (p = 1; p <= 3; p++) {
     if (indexOfLowestSeq[p] != -1) {
       indexToProcess = indexOfLowestSeq[p];
       break;
