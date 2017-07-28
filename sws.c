@@ -171,7 +171,6 @@ int main( int argc, char **argv ) {
 }
 
 void scheduleRCB(int len, FILE *fin, int fd) {
-  numRequests++;
   switch (scheduler) {
     case 1:
       scheduleSJF(len, fin, fd);
@@ -185,6 +184,7 @@ void scheduleRCB(int len, FILE *fin, int fd) {
     default:
       printf("schedule var not valid option\n");
   }
+  numRequests++;
 }
 
 void processRCB() {
