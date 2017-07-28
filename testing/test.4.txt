@@ -14,9 +14,10 @@ How it works:
 10 requests will come in at different times to be scheduled by the scheduler.
 
 Expected Results:
+All results should be scheduled according to their algorithms.
 SJF: 
 	
 RR: 
 	
 	
-MLFB:
+MLFQ:

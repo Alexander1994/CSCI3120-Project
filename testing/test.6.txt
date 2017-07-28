@@ -3,19 +3,22 @@ Title: Test 6 - Large Test - Spread Out - Small Files
 Group Number: 10
 
 Purpose: 
-Ensure that our server can handle up to the specified 100 requests, 
-so 100 potential threads, of small files. 
+Ensure that our server can handle a large number of requests, for small files. 
 Each of these files only requires one pass through the scheduler.
 
 How it works: 
-100 requests will come in and they will be spaced out over a fairly 
+39 requests will come in and they will be spaced out over a fairly 
 large amount of time. However, they will only request files that
 are under 8kb.
+39 was the largest number of request we could do before the python
+script started having problems.
 
 Expected Results:
+All results should be scheduled according to their algorithms.
+The server should not crash.
 SJF: 
 	
 RR: 
 	
 	
-MLFB:
+MLFQ:

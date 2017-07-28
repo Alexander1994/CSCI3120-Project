@@ -16,6 +16,9 @@ requests asks for a file that does not exist. There scheduling should be
 the same as the previous test with the exception of the missing file.
 
 Expected Results:
+All results should be scheduled according to their algorithms.
+Missing files will not be serviced, though due to the python script
+the request number will still be printed.
 SJF: 
 	
 RR: 

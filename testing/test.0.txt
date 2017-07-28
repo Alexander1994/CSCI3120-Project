@@ -18,7 +18,7 @@ RR:
 	They should go based on who arrives first, but a long file will require 
 	multiple passes. The order will be something like: 1, 2, 3, 4, 5, 4, 5, 5...
 	
-MLFB:
+MLFQ:
 	They should go based on who arrives first, but a long file will require 
 	multiple passes and be bumped to different priority queues.
 	The order will be something like: 1, 2, 3, 4, 5, 4, 5, 5, ...
