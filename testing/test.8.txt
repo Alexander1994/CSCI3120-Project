@@ -1,0 +1,23 @@
+Title: Test 8 - Large test - Spread out - Large Files
+
+Group Number: 10
+
+Purpose: 
+Ensure that our server can handle up to the specified 100 requests, 
+so 100 potential threads, of small and large files. 
+Unlike Tests 6 and 7 with the small files, some of these requests 
+will require multiple passes in the scheduler for Round Robin 
+or MLFB.
+
+
+How it works: 
+100 requests will come in for all file sizes and they will be spaced
+out over a fairly large amount of time.
+
+Expected Results:
+SJF: 
+	
+RR: 
+	
+	
+MLFB:

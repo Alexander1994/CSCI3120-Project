@@ -1,0 +1,15 @@
+Title: Test 2 - Missing files
+
+Group Number: 10
+
+Purpose: 
+Test several requests asking for missing files to ensure that they are not
+scheduled. Also ensures that the program does not crash and still returns
+an error message for each file.
+
+How it works: 
+5 requests will come in asking for non existant files.
+
+Expected Results:
+Each algorithm should have an output with five "file not found" errors.
+	
