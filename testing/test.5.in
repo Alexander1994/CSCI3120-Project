@@ -1,0 +1,11 @@
+38080 
+0.0 0.5 testtext4.txt
+0.0 0.6 testtext1.txt
+0.0 0.7 empty.txt
+0.5 1.0 testtext2.txt
+0.5 1.0 testtext1.txt
+0.5 1.0 nofile.txt
+1.0 1.5 testtext3.txt
+1.0 1.5 empty.txt
+1.0 1.5 nofile.txt
+1.0 1.6 testtext2.txt

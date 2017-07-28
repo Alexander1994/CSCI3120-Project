@@ -16,13 +16,9 @@ SJF:
 	They should go from shortest to longest, so : 1, 2, 3, 4, 5
 RR: 
 	They should go based on who arrives first, but a long file will require 
-	multiple passes. Since they all arrive at the same time the order varies 
-	slightly, but testtext3 and testtext4 are greater than 8kb
-	so the order will be something like: 
+	multiple passes. The order will be something like: 1, 2, 3, 4, 5, 4, 5, 5...
 	
 MLFB:
 	They should go based on who arrives first, but a long file will require 
 	multiple passes and be bumped to different priority queues.
-	Since they all arrive at the same time the order varies slightly, but 
-	testtext3 is greater than 8kb and testtext4 is greater than 64 kb so the 
-	order will be something like:
+	The order will be something like: 1, 2, 3, 4, 5, 4, 5, 5, ...
