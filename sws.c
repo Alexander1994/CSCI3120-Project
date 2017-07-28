@@ -88,12 +88,14 @@ static void serve_client( int fd ) {
   if( !req ) {                                      /* is req valid? */
     len = sprintf( buffer, "HTTP/1.1 400 Bad request\n\n" );
     write( fd, buffer, len );                       /* if not, send err */
+    close(fd);
   } else {                                          /* if so, open file */
     req++;                                          /* skip leading / */
     fin = fopen( req, "r" );                        /* open file */
     if( !fin ) {                                    /* check if successful */
       len = sprintf( buffer, "HTTP/1.1 404 File not found\n\n" );
       write( fd, buffer, len );                     /* if not, send err */
+      close(fd);
     } else {                                        /* if so, send file */
       len = sprintf( buffer, "HTTP/1.1 200 OK\n\n" );/* send success code */
       write( fd, buffer, len );
@@ -153,6 +155,7 @@ int main( int argc, char **argv ) {
     printf("Incorrect schedule name\n");
     return 1;
   }
+  printf("port:%d, scheduler:%d\n",port,scheduler );
   initRequestTable();
   network_init( port );                             /* init network module */
 
@@ -202,16 +205,12 @@ void processRCB() {
 
 
 void scheduleSJF(int len, FILE* fin, int fd) {
-
-int rcbCount = 0;
-  int reqIndex = -1;
-
   //get file size
   fseek(fin, 0, SEEK_END);
   int sz = ftell(fin);
   fseek(fin, 0, SEEK_SET);
 
-  RCB req = { -1, fd, len, len, 1, fin};
+  RCB req = { -1, fd, len, len, 1, 0, fin};
 
     size_t i = 0;
 
@@ -247,7 +246,7 @@ void scheduleMLFQ(int len, FILE* fin, int fd) {
     }
     printf("%d %d %d\n", priorityOneCount, fd, len);
     RCB req = {
-      priorityOneCount, fd, len, len, 1,
+      priorityOneCount, fd, len, len, 1, 0,
       fin
     };
 
