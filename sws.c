@@ -45,6 +45,8 @@ static void processMLFQ();
 static int isRCBEmpty(RCB req);
 static void initRequestTable();
 static void processWholeRequest();
+static void printRCBTable();
+static void printRCB(RCB r);
 
 /* This function takes a file handle to a client, reads in the request,
  *    parses the request, and sends back the requested file.  If the
@@ -99,7 +101,11 @@ static void serve_client( int fd ) {
     } else {                                        /* if so, send file */
       len = sprintf( buffer, "HTTP/1.1 200 OK\n\n" );/* send success code */
       write( fd, buffer, len );
-      scheduleRCB(len, fin, fd);
+
+      fseek(fin, 0, SEEK_END); // seek to end of file
+      int size = ftell(fin); // get current file pointer
+      fseek(fin, 0, SEEK_SET);
+      scheduleRCB(size, fin, fd);
 
       /*
       do {                                          // loop, read & send file
@@ -155,7 +161,6 @@ int main( int argc, char **argv ) {
     printf("Incorrect schedule name\n");
     return 1;
   }
-  printf("port:%d, scheduler:%d\n",port,scheduler );
   initRequestTable();
   network_init( port );                             /* init network module */
 
@@ -165,7 +170,7 @@ int main( int argc, char **argv ) {
     for( fd = network_open(); fd >= 0; fd = network_open() ) { /* get clients */
       serve_client( fd );                           /* process each client */
     }
-     if (numRequests > 0) processRCB();
+     while (numRequests > 0) processRCB();
   }
 
 }
@@ -238,19 +243,18 @@ void scheduleMLFQ(int len, FILE* fin, int fd) {
     int rcbCount = 0;
     int reqIndex = -1;
     int priorityOneCount = 1; // seq start at 1 to account for RCB to be added
-    size_t i;
+    size_t i = 0;
     for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
       if (!isRCBEmpty(requestTable[i])) rcbCount++; // inc rcbCount when RCB found
       else if (reqIndex < 0) reqIndex = i; // if an index location is not found && location is empty, set index to add request to empty location
       if (requestTable[i].priority == 1) priorityOneCount++; // count requests with priority 1 to set sequence for RCB
     }
-    printf("%d %d %d\n", priorityOneCount, fd, len);
     RCB req = {
       priorityOneCount, fd, len, len, 1, 0,
       fin
     };
-
-    requestTable[reqIndex] = req;
+    int indexToSet = (reqIndex < 0) ? ((rcbCount == 0) ? 0 : i+1) : reqIndex;
+    requestTable[indexToSet] = req;
 }
 
 void processMLFQ() {
@@ -291,12 +295,15 @@ void processMLFQ() {
     printf("No RCB find in request Table\n");
     return;
   }
-  sendPacketsToClientMLFQ(&requestTable[indexToProcess]);
+  if (requestTable[indexToProcess].bytesRemaining != 0) sendPacketsToClientMLFQ(&requestTable[indexToProcess]);
   if (requestTable[indexToProcess].bytesRemaining == 0) {
     numRequests--;
-    requestTable[indexToProcess] = EMPTY_RCB;
-    fclose( requestTable[indexToProcess].handle );
+    if (requestTable[indexToProcess].handle == NULL) {
+    } else
+      fclose( requestTable[indexToProcess].handle );
     close( requestTable[indexToProcess].fileDescriptor );
+    requestTable[indexToProcess] = EMPTY_RCB;
+
   } else {
     if (requestTable[indexToProcess].priority != 3)
       requestTable[indexToProcess].priority++;
@@ -325,12 +332,13 @@ int getEmptyIndexInRCBTable() {
 }
 
 int isRCBEmpty(RCB req) {
-  return req.seq == 0
+  int isRCBEmpty = req.seq == 0
       && req.fileDescriptor == 0
       && req.bytesRemaining == 0
       && req.fileSize == 0
       && req.priority == 0
       && req.handle == NULL;
+  return isRCBEmpty;
 }
 
 void initRequestTable() {
@@ -348,6 +356,7 @@ void sendPacketsToClientMLFQ(RCB *req) {
   int packetCounter = 0;
   int packetLimit = (req->priority == 1) ? 1 : 8;
 
+  buffer = malloc( MAX_HTTP_SIZE );
   if( !buffer ) {                                   /* 1st time, alloc buffer */
     buffer = malloc( MAX_HTTP_SIZE );
     if( !buffer ) {                                 /* error check */
@@ -357,11 +366,6 @@ void sendPacketsToClientMLFQ(RCB *req) {
   }
 
   memset( buffer, 0, MAX_HTTP_SIZE );
-  if( read( fd, buffer, MAX_HTTP_SIZE ) <= 0 ) {    /* read req from client */
-    perror( "Error while reading request" );
-    abort();
-  }
-
   do {                                             // loop, read & send file
     len = fread( buffer, 1, MAX_HTTP_SIZE, fin );  // read file chunk
     if( len < 0 ) {                                // check for errors
@@ -379,4 +383,25 @@ void sendPacketsToClientMLFQ(RCB *req) {
 
 void processWholeRequest() {
 
+}
+
+void printRCBTable() {
+  int rcbCount =0;
+  size_t i=0;
+  for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
+    if (!isRCBEmpty(requestTable[i]))
+      rcbCount++; // inc rcbCount when RCB found
+      printRCB(requestTable[i]);
+  }
+  printf("\n");
+}
+
+void printRCB(RCB r) {
+  int seq = r.seq;
+  int br = r.bytesRemaining;
+  int fs = r.fileSize;
+  int p = r.priority;
+  int fd = r.fileDescriptor;
+
+  printf("seq:%d fd:%d fs:%d br:%d p:%d\n", seq, fd, fs, br, p );
 }
