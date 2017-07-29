@@ -122,6 +122,7 @@ static void serve_client( int fd ) {
         */
     }
   }
+    close( fd );  
 }
 
 
@@ -208,31 +209,28 @@ void processRCB() {
   }
 }
 
+int compare(const void *s1, const void *s2)
+{
+    struct RCB *e1 = (struct RCB *)s1;
+    struct RCB *e2 = (struct RCB *)s2;
+    return e1->bytesRemaining - e2->bytesRemaining;
+}
 
 void scheduleSJF(int len, FILE* fin, int fd) {
+
+  int rcbCount = 0;
+  int reqIndex = -1;  
+
   //get file size
-  fseek(fin, 0, SEEK_END);
-  int sz = ftell(fin);
-  fseek(fin, 0, SEEK_SET);
+  fseek(fin, 0L, SEEK_END);
+  int sz = (int)ftell(fin);
+  rewind(fin);
 
-  RCB req = { -1, fd, len, len, 1, 0, fin};
+  RCB req = { numRequests, fd, sz, len, 1, fin};
+  requestTable[numRequests] = req;
 
-    size_t i = 0;
-
-  for(i=0; i < numRequests; i++)
-  {
-    if(!isRCBEmpty(requestTable[i]))
-    {
-      if(requestTable[i].bytesRemaining > sz)
-      {
-        requestTable[i+1] = requestTable[i];
-        requestTable[i+1].seq = i+1;
-        requestTable[i] = req;
-        req.seq = i;
-      }
-    }
-  }
-}
+  qsort(requestTable, numRequests, sizeof(struct RCB), compare);
+} 
 
 void scheduleRR(int len, FILE* fin, int fd) {
 
@@ -316,10 +314,10 @@ void processRR() {
 }
 
 void processSJF() {
-    size_t i = 0;
-  for(i=0; i < sizeof(requestTable); i++)
+  size_t i = 0;
+  int oldNumRequests = numRequests;
+  for(i=0; i < oldNumRequests; i++)
   {
-    processWholeRequest();
     numRequests--;
   }
 }
