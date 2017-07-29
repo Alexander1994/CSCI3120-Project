@@ -16,8 +16,14 @@ How it works:
 Expected Results:
 All results should be scheduled according to their algorithms.
 SJF: 
-	
+	1, 2, 3, 6, 5, 4, 7, 8, 9, 10  or 1, 2, 3, 6, 5, 4, 8, 7, 9, 10
+	Since request 7 and 9 are the same length and arrive at the  same time their 
+	order may vary based on who connects first.
 RR: 
-	
-	
+	Something like 1, 2, 3, 6, 5, 4, 8, 9, 7, 10, 1, 9, 7, 1, 1, 1.....
+	Since request 7 and 9 are the same length and arrive at the  same time their 
+	order may vary based on who connects first.
 MLFQ:
+	Something like 1, 2, 3, 6, 5, 4, 8, 9, 7, 10, 1, 9, 7, 1, 1, 1.....
+	Since request 7 and 9 are the same length and arrive at the  same time their 
+	order may vary based on who connects first.

@@ -19,9 +19,16 @@ Expected Results:
 All results should be scheduled according to their algorithms.
 Missing files will not be serviced, though due to the python script
 the request number will still be printed.
+The scheduling will be similar to the past test.
 SJF: 
-	
+	1(404), 2, 3, 6, 5, 4, 7, 8, 9(404), 10  
+	Since request 7 and 9 are the same length and arrive at the  same time their 
+	order may vary based on who connects first.
 RR: 
-	
-	
-MLFB:
+	Something like 1(404), 2, 3, 6, 5, 4, 8, 9(404), 7, 10, 7
+	Since request 7 and 9 are the same length and arrive at the  same time their 
+	order may vary based on who connects first.
+MLFQ:
+	Something like 1(404), 2, 3, 6, 5, 4, 8, 9(404), 7, 10, 7
+	Since request 7 and 9 are the same length and arrive at the  same time their 
+	order may vary based on who connects first.
