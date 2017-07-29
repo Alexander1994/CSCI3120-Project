@@ -198,7 +198,7 @@ void processRCB() {
       processSJF();
       break;
     case 2:
-      processRR();
+      processMLFQ();
       break;
     case 3:
       processMLFQ();
@@ -235,7 +235,21 @@ void scheduleSJF(int len, FILE* fin, int fd) {
 }
 
 void scheduleRR(int len, FILE* fin, int fd) {
-
+  int rcbCount = 0;
+  int reqIndex = -1;
+  int priorityOneCount = 1; // seq start at 1 to account for RCB to be added
+  size_t i = 0;
+  for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
+    if (!isRCBEmpty(requestTable[i])) rcbCount++; // inc rcbCount when RCB found
+    else if (reqIndex < 0) reqIndex = i; // if an index location is not found && location is empty, set index to add request to empty location
+    if (requestTable[i].priority == 3) priorityOneCount++; // count requests with priority 1 to set sequence for RCB
+  }
+  RCB req = {
+    priorityOneCount, fd, len, len, 3, 0,
+    fin
+  };
+  int indexToSet = (reqIndex < 0) ? ((rcbCount == 0) ? 0 : i+1) : reqIndex;
+  requestTable[indexToSet] = req;
 }
 
 // priority 1=8KB, 2=64KB,3=Remainder of the response
