@@ -122,6 +122,7 @@ static void serve_client( int fd ) {
         */
     }
   }
+    close( fd );  
 }
 
 
