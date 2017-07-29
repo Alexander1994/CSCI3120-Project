@@ -15,7 +15,7 @@ All requests will be fore files less than 8 kb
 
 Expected Results:
 All results should be scheduled according to their algorithms.
-RR and MLFQ will have similar results since each file only needs to pass through
+RR and MLFB will have similar results since each file only needs to pass through
 the scheduler once.
 SJF: 
 	1, 2, 3, 6, 5, 4, 7, 8, 9, 10  or 1, 2, 3, 6, 5, 4, 8, 7, 9, 10
@@ -29,7 +29,7 @@ RR:
 	Since they each only require one pass through the scheduler, ordering will 
 	depend on who manage to connect first.
 	
-MLFQ:
+MLFB:
 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10 or 1, 2, 3, 6, 5, 4, 9, 8, 7, 10 or a few other 
 	combinations.
 	Files 4, 5, and 6 and files 7, 8, and 9 have requests sent at the same time.

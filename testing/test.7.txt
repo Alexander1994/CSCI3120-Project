@@ -9,17 +9,34 @@ The requests will come in much more frequently than test 6 to ensure
 that the server can handle many requests at a time.
 
 How it works: 
-39 requests will come in and they will have much smaller delays than 
+29 requests will come in and they will have much smaller delays than 
 Test 6.  They will also only request files that are under 8kb.
-39 was the largest number of request we could do before the python
+29 was the largest number of request we could do before the python
 script started having problems.
 
 Expected Results:
 All results should be scheduled according to their algorithms.
+There will be some variation because multiple requests may come
+in at once for files of the same size.
+All requests are smaller than 8kb so they only pass through each 
+scheduler once
 The server should not crash.
 SJF: 
-	
+	Something like
+	1, 6, 7, 8, 15, 2, 5, 11, 14, 3, 4, 9, 10, 12, 13.....
+	Since many requests are the same length and 
+	arrive at the  same time their order may vary based on who 
+	connects first.
 RR: 
+	Something like
+	1, 6, 7, 8, 15, 2, 5, 11, 14, 3, 4, 9, 10, 12, 13.....
+	Since many requests are the same length and 
+	arrive at the  same time their order may vary based on who 
+	connects first.
 	
-	
-MLFQ:
+MLFB:
+	Something like
+	1, 6, 7, 8, 15, 2, 5, 11, 14, 3, 4, 9, 10, 12, 13.....
+	Since many requests are the same length and 
+	arrive at the  same time their order may vary based on who 
+	connects first.

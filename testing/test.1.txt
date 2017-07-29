@@ -24,7 +24,7 @@ RR:
 	So any combination of 1, 2, 3, 4, 5 or 2, 4, 1, 5, 3 etc.
 	Each request will only appear once since they are all less than 8kb.
 	
-MLFQ:
+MLFB:
 	They are all the same size so the order will vary based on which request 
 	manages to connect first.
 	So any combination of 1, 2, 3, 4, 5 or 2, 4, 1, 5, 3 etc.

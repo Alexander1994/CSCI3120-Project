@@ -10,15 +10,32 @@ or MLFB.
 
 
 How it works: 
-9 requests will come in will come in for all file sizes and they will be spaced
+29 requests will come in will come in for all file sizes and they will be spaced
 out over a fairly large amount of time.
+29 was the largest number of request we could do for this test before 
+the pythonscript started having problems.
 
 Expected Results:
 All results should be scheduled according to their algorithms.
+There will be some variation because multiple requests may come
+in at once for files of the same size.
 The server should not crash.
 SJF: 
-	
+	Something like
+	1, 2, 5, 3, 4, 6, 7, 8, 9, 10, 15, 11, 14, 12, 13.....
+	Since requests 1, 5 and 2, 4 and 6-9 etc. are the same length and 
+	arrive at the  same time their order may vary based on who 
+	connects first.
 RR: 
+	Something like
+	1, 2, 5, 3, 4, 6, 7, 8, 9, 10, 15, 11, 14, 12, 13, 1, 7, 11, 1, 11, 1, ....
+	Since requests 2, 4 and 6,9 etc. are the same length and 
+	arrive at the  same time their order may vary based on who 
+	connects first.	
 	
-	
-MLFQ:
+MLFB:
+	Something like
+	1, 2, 5, 3, 4, 6, 7, 8, 9, 10, 15, 11, 14, 12, 13, 1, 7, 11, 1, 11, 1, ....
+	Since requests and 2, 4 and 6, 9 etc. are the same length and 
+	arrive at the  same time their order may vary based on who 
+	connects first.

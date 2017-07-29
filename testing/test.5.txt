@@ -28,7 +28,7 @@ RR:
 	Something like 1(404), 2, 3, 6, 5, 4, 8, 9(404), 7, 10, 7
 	Since request 7 and 9 are the same length and arrive at the  same time their 
 	order may vary based on who connects first.
-MLFQ:
+MLFB:
 	Something like 1(404), 2, 3, 6, 5, 4, 8, 9(404), 7, 10, 7
 	Since request 7 and 9 are the same length and arrive at the  same time their 
 	order may vary based on who connects first.
