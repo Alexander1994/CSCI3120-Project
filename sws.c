@@ -122,6 +122,7 @@ static void serve_client( int fd ) {
         */
     }
   }
+    close( fd );
 }
 
 
@@ -155,7 +156,7 @@ int main( int argc, char **argv ) {
     scheduler = 1;
   } else if (strcmp(argv[2], "RR") == 0) {
     scheduler = 2;
-  } else if (strcmp(argv[2], "MLFQ") == 0) {
+  } else if (strcmp(argv[2], "MLFB") == 0) {
     scheduler = 3;
   } else {
     printf("Incorrect schedule name\n");
@@ -198,7 +199,7 @@ void processRCB() {
       processSJF();
       break;
     case 2:
-      processRR();
+      processMLFQ();
       break;
     case 3:
       processMLFQ();
@@ -208,34 +209,45 @@ void processRCB() {
   }
 }
 
+int compare(const void *s1, const void *s2)
+{
+    struct RCB *e1 = (struct RCB *)s1;
+    struct RCB *e2 = (struct RCB *)s2;
+    return e1->bytesRemaining - e2->bytesRemaining;
+}
 
 void scheduleSJF(int len, FILE* fin, int fd) {
+
+  int rcbCount = 0;
+  int reqIndex = -1;
+
   //get file size
-  fseek(fin, 0, SEEK_END);
-  int sz = ftell(fin);
-  fseek(fin, 0, SEEK_SET);
+  fseek(fin, 0L, SEEK_END);
+  int sz = (int)ftell(fin);
+  rewind(fin);
 
-  RCB req = { -1, fd, len, len, 1, 0, fin};
+  RCB req = { numRequests, fd, sz, len, 1, fin};
+  requestTable[numRequests] = req;
 
-    size_t i = 0;
-
-  for(i=0; i < numRequests; i++)
-  {
-    if(!isRCBEmpty(requestTable[i]))
-    {
-      if(requestTable[i].bytesRemaining > sz)
-      {
-        requestTable[i+1] = requestTable[i];
-        requestTable[i+1].seq = i+1;
-        requestTable[i] = req;
-        req.seq = i;
-      }
-    }
-  }
+  qsort(requestTable, numRequests, sizeof(struct RCB), compare);
 }
 
 void scheduleRR(int len, FILE* fin, int fd) {
-
+  int rcbCount = 0;
+  int reqIndex = -1;
+  int priorityOneCount = 1; // seq start at 1 to account for RCB to be added
+  size_t i = 0;
+  for (i = 0; rcbCount < numRequests; i++) { // loop until you find all rcb in the table
+    if (!isRCBEmpty(requestTable[i])) rcbCount++; // inc rcbCount when RCB found
+    else if (reqIndex < 0) reqIndex = i; // if an index location is not found && location is empty, set index to add request to empty location
+    if (requestTable[i].priority == 3) priorityOneCount++; // count requests with priority 1 to set sequence for RCB
+  }
+  RCB req = {
+    priorityOneCount, fd, len, len, 3, 0,
+    fin
+  };
+  int indexToSet = (reqIndex < 0) ? ((rcbCount == 0) ? 0 : i+1) : reqIndex;
+  requestTable[indexToSet] = req;
 }
 
 // priority 1=8KB, 2=64KB,3=Remainder of the response
@@ -316,10 +328,10 @@ void processRR() {
 }
 
 void processSJF() {
-    size_t i = 0;
-  for(i=0; i < sizeof(requestTable); i++)
+  size_t i = 0;
+  int oldNumRequests = numRequests;
+  for(i=0; i < oldNumRequests; i++)
   {
-    processWholeRequest();
     numRequests--;
   }
 }
