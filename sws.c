@@ -122,7 +122,7 @@ static void serve_client( int fd ) {
         */
     }
   }
-    close( fd );  
+    close( fd );
 }
 
 
@@ -156,7 +156,7 @@ int main( int argc, char **argv ) {
     scheduler = 1;
   } else if (strcmp(argv[2], "RR") == 0) {
     scheduler = 2;
-  } else if (strcmp(argv[2], "MLFQ") == 0) {
+  } else if (strcmp(argv[2], "MLFB") == 0) {
     scheduler = 3;
   } else {
     printf("Incorrect schedule name\n");
@@ -219,7 +219,7 @@ int compare(const void *s1, const void *s2)
 void scheduleSJF(int len, FILE* fin, int fd) {
 
   int rcbCount = 0;
-  int reqIndex = -1;  
+  int reqIndex = -1;
 
   //get file size
   fseek(fin, 0L, SEEK_END);
@@ -230,7 +230,7 @@ void scheduleSJF(int len, FILE* fin, int fd) {
   requestTable[numRequests] = req;
 
   qsort(requestTable, numRequests, sizeof(struct RCB), compare);
-} 
+}
 
 void scheduleRR(int len, FILE* fin, int fd) {
 
